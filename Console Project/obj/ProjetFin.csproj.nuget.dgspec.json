@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Alice's UWU PC\\Downloads\\ProjetFin\\ProjetFin\\ProjetFin.csproj": {}
+    "C:\\Users\\Alice's UWU PC\\www\\Projet-Mainframe\\Console Project\\ProjetFin.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Alice's UWU PC\\Downloads\\ProjetFin\\ProjetFin\\ProjetFin.csproj": {
+    "C:\\Users\\Alice's UWU PC\\www\\Projet-Mainframe\\Console Project\\ProjetFin.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Alice's UWU PC\\Downloads\\ProjetFin\\ProjetFin\\ProjetFin.csproj",
+        "projectUniqueName": "C:\\Users\\Alice's UWU PC\\www\\Projet-Mainframe\\Console Project\\ProjetFin.csproj",
         "projectName": "ProjetFin",
-        "projectPath": "C:\\Users\\Alice's UWU PC\\Downloads\\ProjetFin\\ProjetFin\\ProjetFin.csproj",
+        "projectPath": "C:\\Users\\Alice's UWU PC\\www\\Projet-Mainframe\\Console Project\\ProjetFin.csproj",
         "packagesPath": "C:\\Users\\Alice's UWU PC\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Alice's UWU PC\\Downloads\\ProjetFin\\ProjetFin\\obj\\",
+        "outputPath": "C:\\Users\\Alice's UWU PC\\www\\Projet-Mainframe\\Console Project\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
