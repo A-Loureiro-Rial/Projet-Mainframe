@@ -1,0 +1,386 @@
+000100 ID DIVISION.                                                     00010002
+000200 PROGRAM-ID.  ADDPROD.                                            00020002
+000300                                                                  00030002
+000310 ENVIRONMENT DIVISION.                                            00031002
+000350                                                                  00035002
+000351 INPUT-OUTPUT SECTION.                                            00035102
+000352 FILE-CONTROL.                                                    00035202
+000353                                                                  00035302
+000354     SELECT CONV ASSIGN TO FCONV                                  00035418
+000355     ORGANIZATION IS INDEXED                                      00035518
+000356     ACCESS MODE IS RANDOM                                        00035618
+000357     RECORD KEY IS CODE-CONV                                      00035749
+000358     FILE STATUS IS FS-CONV.                                      00035818
+000359                                                                  00035917
+000360     SELECT PROD ASSIGN TO FPROD                                  00036012
+000361     ORGANIZATION IS SEQUENTIAL                                   00036102
+000362     FILE STATUS IS FS-PROD.                                      00036202
+000363                                                                  00036322
+000364     SELECT ERR ASSIGN TO FERR                                    00036422
+000365     ORGANIZATION IS SEQUENTIAL                                   00036522
+000366     FILE STATUS IS FS-ERR.                                       00036622
+000367                                                                  00036722
+000368 DATA DIVISION.                                                   00036822
+000369 FILE SECTION.                                                    00036922
+000370                                                                  00037002
+000371 FD CONV                                                          00037117
+000372     BLOCK CONTAINS 0 RECORDS.                                    00037217
+000373                                                                  00037317
+000374 01 ENR-CONV.                                                     00037417
+000375     05 CODE-CONV PIC X(3).                                       00037517
+000376     05 RATE-CONV PIC 9(12)V9(6).                                 00037675
+000378     05 DATE-CONV PIC 9(6).                                       00037817
+000379     05 FILLER PIC X(3).                                          00037925
+000380                                                                  00038017
+000381 FD PROD                                                          00038102
+000382     BLOCK CONTAINS 0 RECORDS.                                    00038202
+000383                                                                  00038302
+000384 01 ENR-PROD PIC X(50).                                           00038425
+000385                                                                  00038522
+000386 FD ERR                                                           00038622
+000387     BLOCK CONTAINS 0 RECORDS.                                    00038722
+000388                                                                  00038822
+000389 01 ENR-ERR PIC X(90).                                            00038932
+000390                                                                  00039022
+000391 WORKING-STORAGE SECTION.                                         00039122
+000392                                                                  00039222
+000393     EXEC SQL  INCLUDE SQLCA    END-EXEC.                         00039322
+000394                                                                  00039422
+000395     EXEC SQL  INCLUDE PRODUCTS END-EXEC.                         00039522
+000396                                                                  00039622
+000400 77 ABDERR              PIC 9   VALUE ZERO.                       00040025
+000401 77 ENDFILE             PIC 9   VALUE ZERO.                       00040106
+000402 77 FS-PROD             PIC 99.                                   00040206
+000403 77 FS-CONV             PIC 99.                                   00040317
+000404 77 FS-ERR              PIC 99.                                   00040435
+000405 77 ED-SQLCODE          PIC +9(9).                                00040522
+000406 77 NBSPACES            PIC 99 VALUE ZERO.                        00040622
+000407 77 VALID-PROD          PIC 9 VALUE 1.                            00040722
+000408 77 WS-PU-LENGTH        PIC 99 VALUE ZERO.                        00040885
+000409 77 WS-ST-LENGTH        PIC 9 VALUE ZERO.                         00040999
+000416 77 WS-ST-SPACES        PIC 9 VALUE ZERO.                         00041699
+000417 01 WS-NUMBER1.                                                   00041784
+000418     05 WS-NUMBER1-VALUE PIC X(6) VALUE ALL SPACES.               00041896
+000419     05 WS-NUMBER1-LENGTH PIC 9 VALUE ZERO.                       00041984
+000420     05 WS-NUMBER1-SPACES PIC 9 VALUE ZERO.                       00042084
+000421                                                                  00042184
+000422 01 WS-NUMBER2.                                                   00042284
+000423     05 WS-NUMBER2-VALUE PIC X(6) VALUE ALL SPACES.               00042397
+000424     05 WS-NUMBER2-LENGTH PIC 9 VALUE ZERO.                       00042484
+000425     05 WS-NUMBER2-SPACES PIC 9 VALUE ZERO.                       00042599
+000426                                                                  00042699
+000427 01 WS-PROD.                                                      00042799
+000428     05 WS-CODE-PROD PIC X(3) VALUE ALL SPACES.                   00042899
+000429     05 WS-DESC-PROD PIC X(30) VALUE ALL SPACES.                  00042999
+000430     05 WS-PU-PROD   PIC X(6) VALUE ALL SPACES.                   00043099
+000431     05 WS-DE-PROD   PIC X(3) VALUE ALL SPACES.                   00043199
+000432     05 WS-ST-PROD   PIC X(6) VALUE ALL SPACES.                   00043299
+000433                                                                  00043399
+000434 01 WS-ERROR-REPORT.                                              00043499
+000435     05 WS-MES-ERROR PIC X(30) VALUE ALL ' '.                     00043599
+000436     05 FILLER       PIC X VALUE ' '.                             00043699
+000437     05 FILLER       PIC X(8) VALUE ALL '-'.                      00043799
+000438     05 FILLER       PIC X VALUE ' '.                             00043899
+000439     05 WS-ENR-ERROR PIC X(50) VALUE ALL ' '.                     00043999
+000440                                                                  00044099
+000441 PROCEDURE DIVISION.                                              00044199
+000450                                                                  00045002
+000500     OPEN INPUT PROD                                              00050004
+000510     IF FS-PROD NOT EQUAL ZERO                                    00051004
+000511         DISPLAY '!!!ERROR!!! CANNOT OPEN PROD FILE'              00051116
+000512         DISPLAY ', FS-PROD : ' FS-PROD                           00051216
+000513         PERFORM ABDPRG                                           00051302
+000514     END-IF                                                       00051402
+000515                                                                  00051516
+000516     OPEN INPUT CONV                                              00051616
+000517     IF FS-CONV NOT EQUAL ZERO                                    00051716
+000518         DISPLAY '!!!ERROR!!! CANNOT OPEN CONV FILE'              00051816
+000519         DISPLAY ', FS-CONV : ' FS-CONV                           00051916
+000520         PERFORM ABDPRG                                           00052016
+000521     END-IF                                                       00052116
+000522                                                                  00052222
+000523     OPEN OUTPUT ERR                                              00052338
+000525     IF FS-ERR NOT EQUAL ZERO                                     00052541
+000526         DISPLAY '!!!ERROR!!! CANNOT OPEN ERR FILE'               00052641
+000527         DISPLAY ', FS-ERR : ' FS-ERR                             00052741
+000528         PERFORM ABDPRG                                           00052841
+000529     END-IF                                                       00052941
+000531     PERFORM PARSEPROD                                            00053122
+000533     CLOSE PROD                                                   00053322
+000534     IF FS-PROD NOT EQUAL ZERO                                    00053422
+000535         DISPLAY '!!!ERROR!!! ERROR WHILE CLOSING PROD FILE'      00053522
+000536         DISPLAY ', FS-PROD : ' FS-PROD                           00053622
+000537         PERFORM ABDPRG                                           00053722
+000538     END-IF                                                       00053822
+000539                                                                  00053922
+000540     CLOSE CONV                                                   00054022
+000541     IF FS-CONV NOT EQUAL ZERO                                    00054122
+000542         DISPLAY '!!!ERROR!!! ERROR WHILE CLOSING CONV FILE'      00054222
+000543         DISPLAY ', FS-CONV : ' FS-CONV                           00054322
+000544         PERFORM ABDPRG                                           00054422
+000545     END-IF                                                       00054522
+000546                                                                  00054622
+000547     CLOSE ERR                                                    00054722
+000548     IF FS-ERR NOT EQUAL ZERO                                     00054822
+000549         DISPLAY '!!!ERROR!!! ERROR WHILE CLOSING ERR FILE'       00054922
+000550         DISPLAY ', FS-ERR : ' FS-ERR                             00055022
+000551         PERFORM ABDPRG                                           00055122
+000552     END-IF                                                       00055222
+000553     DISPLAY 'TOUT EST OK'                                        00055322
+000554     EXEC SQL     COMMIT      END-EXEC                            00055499
+000555     GOBACK                                                       00055522
+000556     .                                                            00055622
+000557                                                                  00055722
+000558 PARSEPROD.                                                       00055822
+000559     PERFORM READROW                                              00055922
+000560     PERFORM UNTIL ENDFILE EQUAL 1                                00056022
+000561         PERFORM GETPRODDATA                                      00056122
+000564         PERFORM CHECKPRODDATA                                    00056422
+000566         IF VALID-PROD EQUAL 1                                    00056622
+000568             PERFORM MOVEPRODTOSQL                                00056822
+000569             PERFORM ADDNEWPROD                                   00056922
+000570         END-IF                                                   00057022
+000571         PERFORM READROW                                          00057122
+000572     END-PERFORM                                                  00057222
+000573     .                                                            00057322
+000574                                                                  00057422
+000575 GETPRODDATA.                                                     00057522
+000576     INITIALIZE WS-PROD ST-PROD WS-PU-LENGTH WS-ST-LENGTH         00057685
+000579     UNSTRING ENR-PROD                                            00057922
+000580        DELIMITED BY ';'                                          00058022
+000581        INTO WS-CODE-PROD, WS-DESC-PROD,                          00058199
+000582            WS-PU-PROD COUNT IN WS-PU-LENGTH ,                    00058299
+000583            WS-DE-PROD, WS-ST-PROD COUNT IN WS-ST-LENGTH          00058399
+000584        ON OVERFLOW                                               00058422
+000585            MOVE 'INVALID FORMAT : OVERFLOW' TO WS-MES-ERROR      00058522
+000586            PERFORM REPORTERROR                                   00058622
+000587     END-UNSTRING                                                 00058722
+000596     .                                                            00059676
+000597                                                                  00059776
+000598 CHECKPRODDATA.                                                   00059876
+000599     INITIALIZE WS-NUMBER1 WS-NUMBER2                             00059999
+000600     MOVE 1 TO VALID-PROD                                         00060099
+000601                                                                  00060199
+000602* CHECKS THAT CODE-PROD IS NOT EMPTY                              00060254
+000603     IF WS-CODE-PROD EQUAL ALL SPACES                             00060354
+000604         INITIALIZE WS-ERROR-REPORT                               00060454
+000605         MOVE 'EMPTY PRODUCT CODE' TO WS-MES-ERROR                00060554
+000606         PERFORM REPORTERROR                                      00060654
+000607         MOVE 0 TO VALID-PROD                                     00060754
+000608     END-IF                                                       00060854
+000609                                                                  00060954
+000610* CHECKS IF THE DESCRIPTION IF EMPTY (HAS ONLY SPACES)            00061054
+000611     INITIALIZE NBSPACES                                          00061154
+000612     INSPECT WS-DESC-PROD TALLYING NBSPACES FOR LEADING SPACES    00061254
+000613     IF WS-DESC-PROD EQUAL SPACES                                 00061399
+000614         INITIALIZE WS-ERROR-REPORT                               00061454
+000615         MOVE 'EMPTY DESCRIPTION' TO WS-MES-ERROR                 00061554
+000616         PERFORM REPORTERROR                                      00061654
+000617         MOVE 0 TO VALID-PROD                                     00061754
+000618     END-IF                                                       00061854
+000619* CHECKS THE UNITPRICE (IF SOMETHING OTHER THAN A NUMBER IS PASSED00061954
+000623     IF WS-PU-LENGTH EQUAL ZERO                                   00062384
+000625         INITIALIZE WS-ERROR-REPORT                               00062560
+000626         MOVE 'INVALID PRICE' TO WS-MES-ERROR                     00062699
+000627         PERFORM REPORTERROR                                      00062760
+000628         MOVE 0 TO VALID-PROD                                     00062860
+000629     ELSE                                                         00062984
+000630* UNSTRING THE PRICE BY . TO GET THE INTEGER AND DECIMAL PARTS    00063099
+000631         INITIALIZE WS-NUMBER1 WS-NUMBER2                         00063184
+000632         UNSTRING WS-PU-PROD DELIMITED BY '.'                     00063284
+000633         INTO WS-NUMBER1-VALUE COUNT IN WS-NUMBER1-LENGTH,        00063395
+000634           WS-NUMBER2-VALUE COUNT IN WS-NUMBER2-LENGTH            00063495
+000635         ON OVERFLOW                                              00063584
+000636             INITIALIZE WS-ERROR-REPORT                           00063684
+000637             MOVE 'INVALID PRICE' TO WS-MES-ERROR                 00063799
+000638             PERFORM REPORTERROR                                  00063884
+000639             MOVE 0 TO VALID-PROD                                 00063984
+000640         END-UNSTRING                                             00064084
+000641*  THE INTEGER PART CANNOT BE EMPTY                               00064199
+000646         IF WS-NUMBER1-LENGTH EQUAL 0                             00064699
+000647             INITIALIZE WS-ERROR-REPORT                           00064799
+000648             MOVE 'INVALID PRICE' TO WS-MES-ERROR                 00064899
+000649             PERFORM REPORTERROR                                  00064999
+000650             MOVE 0 TO VALID-PROD                                 00065099
+000651         ELSE                                                     00065199
+000652            INSPECT FUNCTION REVERSE(WS-NUMBER1-VALUE)            00065299
+000653             TALLYING WS-NUMBER1-SPACES FOR LEADING SPACES        00065399
+000654* THE INTEGER PART CANNOT BE ONLY SPACES EITHER                   00065499
+000655            IF WS-NUMBER1-VALUE EQUAL SPACES                      00065599
+000656                INITIALIZE WS-ERROR-REPORT                        00065699
+000657                MOVE 'INVALID PRICE' TO WS-MES-ERROR              00065799
+000658                PERFORM REPORTERROR                               00065899
+000659                MOVE 0 TO VALID-PROD                              00065999
+000660            ELSE                                                  00066099
+000670* CHECKS THAT THE INTEGER PART ESCAPING TRAILING SPACES IS NUMERIC00067099
+000675                IF WS-NUMBER1-VALUE(1:LENGTH OF WS-NUMBER1-VALUE -00067599
+000676                  WS-NUMBER1-SPACES) IS NOT NUMERIC               00067699
+000677                    INITIALIZE WS-ERROR-REPORT                    00067799
+000678                    MOVE 'PRICE IS NOT NUMERIC' TO WS-MES-ERROR   00067899
+000680                    PERFORM REPORTERROR                           00068099
+000681                    MOVE 0 TO VALID-PROD                          00068199
+000682                ELSE                                              00068299
+000683                    INSPECT FUNCTION REVERSE(WS-NUMBER2-VALUE)    00068399
+000684                      TALLYING WS-NUMBER2-SPACES                  00068499
+000685                      FOR LEADING SPACES                          00068599
+000686* CHECKS THAT IF THERE IS A DECIMAL PART, IT IS NUMERIC           00068699
+000687                    IF WS-NUMBER2-LENGTH > 0                      00068799
+000688                      AND WS-NUMBER2-VALUE(1:LENGTH OF            00068899
+000689                      WS-NUMBER2-VALUE - WS-NUMBER2-SPACES)       00068999
+000690                      IS NOT NUMERIC                              00069099
+000691                        INITIALIZE WS-ERROR-REPORT                00069199
+000692                        MOVE 'PRICE NOT NUMERIC' TO WS-MES-ERROR  00069299
+000694                        PERFORM REPORTERROR                       00069499
+000695                        MOVE 0 TO VALID-PROD                      00069599
+000696                    END-IF                                        00069699
+000697                END-IF                                            00069799
+000698            END-IF                                                00069899
+000699         END-IF                                                   00069999
+000700     END-IF                                                       00070099
+000709     MOVE 0 TO WS-ST-SPACES                                       00070999
+000710     MOVE FUNCTION REVERSE(WS-ST-PROD) TO WS-ST-PROD              00071099
+000711     INSPECT WS-ST-PROD TALLYING WS-ST-SPACES FOR LEADING SPACES  00071199
+000715     MOVE FUNCTION REVERSE(WS-ST-PROD) TO WS-ST-PROD              00071599
+000716* CHECKS IF THERE IS NO STOCK                                     00071699
+000717     IF WS-ST-PROD EQUAL SPACES                                   00071799
+000718         INITIALIZE WS-ERROR-REPORT                               00071899
+000719         MOVE 'STOCK IS EMPTY' TO WS-MES-ERROR                    00071999
+000720         PERFORM REPORTERROR                                      00072099
+000721         MOVE 0 TO VALID-PROD                                     00072199
+000722     ELSE                                                         00072299
+000723* CHECKS THAT THE STOCK IS NUMERIC, ESCAPING TRAILING SPACES      00072399
+000724         IF WS-ST-PROD(1:LENGTH OF WS-ST-PROD - WS-ST-SPACES)     00072499
+000725           IS NOT NUMERIC                                         00072599
+000726             INITIALIZE WS-ERROR-REPORT                           00072699
+000727             MOVE 'STOCK IS NOT NUMERIC' TO WS-MES-ERROR          00072799
+000728             PERFORM REPORTERROR                                  00072899
+000729             MOVE 0 TO VALID-PROD                                 00072999
+000730         END-IF                                                   00073099
+000731     END-IF                                                       00073199
+000732* CHECKS IF THE CURRENCY IS NOT EMPTY AND IN THE GIVEN LIST       00073299
+000733     IF WS-DE-PROD EQUAL SPACES                                   00073399
+000734         INITIALIZE WS-ERROR-REPORT                               00073499
+000735         MOVE 'DEVISE IS EMPTY' TO WS-MES-ERROR                   00073599
+000736         PERFORM REPORTERROR                                      00073699
+000737         MOVE 0 TO VALID-PROD                                     00073799
+000738     ELSE                                                         00073899
+000739         IF WS-DE-PROD NOT = 'USD'                                00073999
+000740             MOVE WS-DE-PROD TO CODE-CONV                         00074099
+000741             READ CONV                                            00074199
+000742             EVALUATE FS-CONV                                     00074299
+000743                 WHEN 0                                           00074399
+000744                     CONTINUE                                     00074499
+000745                 WHEN 23                                          00074599
+000746                     INITIALIZE WS-ERROR-REPORT                   00074699
+000747                     MOVE 'UNKNOWN DEVISE NAME'                   00074799
+000748                       TO WS-MES-ERROR                            00074899
+000749                     PERFORM REPORTERROR                          00074999
+000750                     MOVE 0 TO VALID-PROD                         00075099
+000751                 WHEN OTHER                                       00075199
+000752                     INITIALIZE WS-ERROR-REPORT                   00075299
+000753                     STRING                                       00075399
+000754                         'ERROR ON DEVISE FS : ' DELIMITED BY SIZE00075499
+000756                         FS-CONV DELIMITED BY SIZE                00075699
+000757                         INTO WS-MES-ERROR                        00075799
+000758                     END-STRING                                   00075899
+000759                     PERFORM REPORTERROR                          00075999
+000760                     MOVE 0 TO VALID-PROD                         00076099
+000761             END-EVALUATE                                         00076199
+000762         END-IF                                                   00076299
+000763     END-IF                                                       00076399
+000764     .                                                            00076499
+000765                                                                  00076599
+000766 MOVEPRODTOSQL.                                                   00076699
+000767     INITIALIZE ST-PROD                                           00076799
+000768     MOVE WS-CODE-PROD TO PROD-P-NO                               00076899
+000769* FORMAT THE DESCRIPTION: REMOVING LEADING SPACES, FIRST LETTER   00076999
+000770* UPPERCASE AND THE REST LOWERCASE                                00077099
+000771     STRING                                                       00077199
+000772         FUNCTION UPPER-CASE(WS-DESC-PROD(1 + NBSPACES:1))        00077299
+000773                  DELIMITED BY SIZE                               00077399
+000774         FUNCTION LOWER-CASE(WS-DESC-PROD(2 + NBSPACES:))         00077499
+000775                  DELIMITED BY SIZE                               00077599
+000776         INTO PROD-DESCRIPTION-TEXT                               00077699
+000777     END-STRING                                                   00077799
+000778* COUNTS THE SPACES AT THE END OF THE DESCRIPTION                 00077899
+000779     MOVE 0 TO NBSPACES                                           00077999
+000780     INSPECT FUNCTION REVERSE (WS-DESC-PROD) TALLYING NBSPACES    00078099
+000781             FOR LEADING SPACE                                    00078199
+000782     SUBTRACT NBSPACES FROM LENGTH OF WS-DESC-PROD                00078299
+000783              GIVING PROD-DESCRIPTION-LEN                         00078399
+000784* IF THE DEVISE IS USD, IT DOESN'T NEED TO BE CONVERTED           00078499
+000786     IF WS-DE-PROD = 'USD'                                        00078699
+000787         COMPUTE PROD-PRICE = FUNCTION NUMVAL(WS-PU-PROD)         00078799
+000788           ON SIZE ERROR                                          00078899
+000789             INITIALIZE WS-ERROR-REPORT                           00078999
+000790             MOVE 'PRICE TOO BIG' TO WS-MES-ERROR                 00079099
+000791             PERFORM REPORTERROR                                  00079199
+000792             MOVE 0 TO VALID-PROD                                 00079299
+000793         END-COMPUTE                                              00079399
+000794     ELSE                                                         00079499
+000795* OTHERWISE, CONVERTS IT USING PROVIDED CONVERT RATE              00079599
+000796         COMPUTE PROD-PRICE = FUNCTION NUMVAL(WS-PU-PROD)         00079699
+000797           * RATE-CONV                                            00079799
+000798           ON SIZE ERROR                                          00079899
+000799             INITIALIZE WS-ERROR-REPORT                           00079999
+000800             MOVE 'CONVERTED PRICE TOO BIG' TO WS-MES-ERROR       00080099
+000801             PERFORM REPORTERROR                                  00080199
+000802             MOVE 0 TO VALID-PROD                                 00080299
+000803         END-COMPUTE                                              00080399
+000804     END-IF                                                       00080499
+000805     COMPUTE PROD-STOCK = FUNCTION NUMVAL(WS-ST-PROD)             00080599
+000806     .                                                            00080699
+000807                                                                  00080799
+000808 ADDNEWPROD.                                                      00080899
+000813     EXEC SQL                                                     00081399
+000814        INSERT INTO API6.PRODUCTS (P_NO, DESCRIPTION, PRICE,      00081499
+000815                    STOCK)                                        00081599
+000816        VALUES (:PROD-P-NO, :PROD-DESCRIPTION, :PROD-PRICE,       00081699
+000817                :PROD-STOCK)                                      00081799
+000818     END-EXEC                                                     00081899
+000819     PERFORM TESTSQLCODE                                          00081999
+000820     .                                                            00082099
+000821                                                                  00082199
+000822 TESTSQLCODE.                                                     00082299
+000823     EVALUATE TRUE                                                00082399
+000824         WHEN SQLCODE = 0                                         00082499
+000825             CONTINUE                                             00082599
+000826         WHEN SQLCODE = -803                                      00082699
+000827             INITIALIZE WS-ERROR-REPORT                           00082799
+000828             STRING                                               00082899
+000829                 'PRODUCT ' DELIMITED BY SIZE                     00082999
+000830                 PROD-P-NO DELIMITED BY SIZE                      00083099
+000831                 ' EXISTS' DELIMITED BY SIZE                      00083199
+000832                 INTO WS-MES-ERROR                                00083299
+000833             END-STRING                                           00083399
+000834             PERFORM REPORTERROR                                  00083499
+000835         WHEN OTHER                                               00083599
+000836             INITIALIZE WS-ERROR-REPORT                           00083699
+000837             MOVE SQLCODE TO ED-SQLCODE                           00083799
+000838             STRING                                               00083899
+000839                 'ERROR DURING INSERT : ' DELIMITED BY SIZE       00083999
+000841                 ED-SQLCODE DELIMITED BY SIZE                     00084199
+000842                 INTO WS-MES-ERROR                                00084299
+000843             END-STRING                                           00084399
+000844             PERFORM REPORTERROR                                  00084499
+000845     END-EVALUATE                                                 00084599
+000846     .                                                            00084699
+000847                                                                  00084799
+000848 REPORTERROR.                                                     00084899
+000849     MOVE ENR-PROD TO WS-ENR-ERROR                                00084999
+000850     WRITE ENR-ERR FROM WS-ERROR-REPORT                           00085099
+000851     .                                                            00085199
+000852                                                                  00085299
+000853 READROW.                                                         00085399
+000854     READ PROD AT END                                             00085499
+000855         MOVE 1 TO ENDFILE                                        00085599
+000856     END-READ                                                     00085699
+000857     .                                                            00085799
+000858                                                                  00085899
+000859 ABDPRG.                                                          00085999
+000860     EXEC SQL     ROLLBACK      END-EXEC                          00086099
+000861     DISPLAY 'CRITICAL ERROR : ROLLBACK PERFORMED'                00086199
+000862     COMPUTE ABDERR = 1 / ABDERR                                  00086299
+000863     .                                                            00086399
+000870                                                                  00087099
+000900                                                                  00090002

@@ -1,0 +1,37 @@
+//JPART2E JOB (ACCT#),'ROMANE',MSGCLASS=H,REGION=4M,
+//       CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,TIME=(,30),
+//       RESTART=*,COND=(8,LT)
+//*******************************************************************
+//*  ETAPE 01 : SUPRESSION FICHIER VENTES
+//*******************************************************************
+//SUPP     EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+       DELETE API6.PROJET.VENTES.DATA
+/*
+//*******************************************************************
+//*  ETAPE 02 : FAIRE LE TRI ET FUSION DES FICHIERS VENTES
+//*******************************************************************
+//TRI      EXEC PGM=SORT
+//SORTIN   DD DSN=API6.PROJET.VENTESEU.DATA,DISP=SHR
+//         DD DSN=API6.PROJET.VENTESAS.DATA,DISP=SHR
+//SORTWORK DD DSN=&&TEMP,DISP=(NEW,PASS)
+//SORTOUT  DD DSN=API6.PROJET.VENTES.DATA,DISP=(NEW,CATLG,DELETE),
+//        DCB=(RECFM=FB,BLKSIZE=350,LRECL=35),
+//        SPACE=(TRK,(1,1),RLSE),DSORG=PS
+//SYSIN    DD *
+         SORT FIELDS=(1,3,ZD,A)
+/*
+//SYSOUT   DD SYSOUT=*
+//*******************************************************************
+//*  ETAPE 03 : EXECUTION TRAITEMENTS DES VENTES
+//*******************************************************************
+//EXEC     EXEC PGM=IKJEFT01,COND=(4,LT)
+//STEPLIB  DD DSN=API6.SOURCE.PGMLIB,DISP=SHR
+//SYSOUT   DD  SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=2500
+//FSALES   DD DSN=API6.PROJET.VENTES.DATA,DISP=SHR
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(PART2) PLAN (PART2)
+/*

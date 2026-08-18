@@ -1,0 +1,58 @@
+//JEXTRACT JOB (ACCT#),'ROMANE',MSGCLASS=H,REGION=4M,
+//       CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,
+//       RESTART=*,COND=(8,LT)
+//******************************************************************
+//*   STEP 00
+//******************************************************************
+//PROCLIB  JCLLIB ORDER=SDJ.FORM.PROCLIB
+//*
+//         SET SYSUID=API6,
+//             NOMPGM=EXTRACT
+//******************************************************************
+//*   STEP 00.B : SUPPRESSION
+//******************************************************************
+//SUPP     EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+    DELETE API6.PROJET.EXTRACT.DATA
+/*
+//******************************************************************
+//*   STEP 01 COMPIL
+//******************************************************************
+//COMPIL   EXEC COMPDB2
+//STEPDB2.SYSLIB   DD DSN=&SYSUID..PROJET.DCLGEN,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=&SYSUID..PROJET.DB2(&NOMPGM),DISP=SHR
+//STEPDB2.DBRMLIB  DD DSN=&SYSUID..SOURCE.DBRMLIB(&NOMPGM),DISP=SHR
+//STEPLNK.SYSLMOD  DD DSN=&SYSUID..SOURCE.PGMLIB(&NOMPGM),DISP=SHR
+//******************************************************************
+//*   STEP 02 BIND
+//******************************************************************
+//BIND     EXEC PGM=IKJEFT01,COND=(4,LT)
+//DBRMLIB  DD  DSN=&SYSUID..SOURCE.DBRMLIB,DISP=SHR
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=40000
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  BIND PLAN      (EXTRACT)  -
+       QUALIFIER (API6)    -
+       ACTION    (REPLACE) -
+       MEMBER    (EXTRACT)  -
+       VALIDATE  (BIND)    -
+       ISOLATION (CS)      -
+       ACQUIRE   (USE)     -
+       RELEASE   (COMMIT)  -
+       EXPLAIN   (NO)
+/*
+//*******************************************************************
+//*  STEP 4 : EXECUTION DE EXTRACT
+//*******************************************************************
+//EXEC     EXEC PGM=IKJEFT01,COND=(4,LT)
+//STEPLIB  DD DSN=&SYSUID..SOURCE.PGMLIB,DISP=SHR
+//SYSOUT   DD  SYSOUT=*,OUTLIM=10000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
+//FEXTRAC  DD DSN=API6.PROJET.EXTRACT.DATA,DISP=(NEW,CATLG,DELETE),
+//        DCB=(RECFM=FB,BLKSIZE=1750,LRECL=175),
+//        SPACE=(TRK,(3,1),RLSE),DSORG=PS
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(EXTRACT) PLAN (EXTRACT)
+/*

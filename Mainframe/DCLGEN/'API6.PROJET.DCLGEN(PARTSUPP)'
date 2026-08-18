@@ -1,0 +1,29 @@
+      ******************************************************************
+      * DCLGEN TABLE(API6.PARTSUPP)                                    *
+      *        LIBRARY(API6.PROJET.DCLGEN(PARTSUPP))                   *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(PSUP-)                                            *
+      *        STRUCTURE(ST-PSUP)                                      *
+      *        QUOTE                                                   *
+      *        COLSUFFIX(YES)                                          *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API6.PARTSUPP TABLE
+           ( PNO                            CHAR(2) NOT NULL,
+             SNO                            CHAR(2) NOT NULL,
+             QTY                            DECIMAL(2, 0) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API6.PARTSUPP                      *
+      ******************************************************************
+       01  ST-PSUP.
+      *                       PNO
+           10 PSUP-PNO             PIC X(2).
+      *                       SNO
+           10 PSUP-SNO             PIC X(2).
+      *                       QTY
+           10 PSUP-QTY             PIC S9(2)V USAGE COMP-3.
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 3       *
+      ******************************************************************

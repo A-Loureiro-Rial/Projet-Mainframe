@@ -1,0 +1,35 @@
+      ******************************************************************
+      * DCLGEN TABLE(API6.SUPPLIER)                                    *
+      *        LIBRARY(API6.PROJET.DCLGEN(SUPPLIER))                   *
+      *        ACTION(REPLACE)                                         *
+      *        LANGUAGE(COBOL)                                         *
+      *        NAMES(SUP-)                                             *
+      *        STRUCTURE(ST-SUP)                                       *
+      *        QUOTE                                                   *
+      *        COLSUFFIX(YES)                                          *
+      * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+      ******************************************************************
+           EXEC SQL DECLARE API6.SUPPLIER TABLE
+           ( SNO                            CHAR(2) NOT NULL,
+             SNAME                          VARCHAR(20) NOT NULL,
+             CITY                           VARCHAR(20) NOT NULL
+           ) END-EXEC.
+      ******************************************************************
+      * COBOL DECLARATION FOR TABLE API6.SUPPLIER                      *
+      ******************************************************************
+       01  ST-SUP.
+      *                       SNO
+           10 SUP-SNO              PIC X(2).
+           10 SUP-SNAME.
+      *                       SNAME LENGTH
+              49 SUP-SNAME-LEN     PIC S9(4) USAGE COMP.
+      *                       SNAME
+              49 SUP-SNAME-TEXT    PIC X(20).
+           10 SUP-CITY.
+      *                       CITY LENGTH
+              49 SUP-CITY-LEN      PIC S9(4) USAGE COMP.
+      *                       CITY
+              49 SUP-CITY-TEXT     PIC X(20).
+      ******************************************************************
+      * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 3       *
+      ******************************************************************

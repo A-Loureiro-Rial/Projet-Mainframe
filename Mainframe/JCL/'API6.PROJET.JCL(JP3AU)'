@@ -1,0 +1,11 @@
+//JP3AU    JOB (ACCT#),'ALICE',MSGCLASS=H,REGION=4M,                    00010002
+//      CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,TIME=(0,5),               00020002
+//      COND=(4,LT)                                                     00030002
+//*                                                                     00040002
+// JCLLIB ORDER=SDJ.FORM.PROCLIB                                        00050002
+//*                                                                     00060002
+//COMPCIC  EXEC COMPCICS,NOMPGM=P3AU                                    00070002
+//STEPCIC.SYSIN  DD DSN=API6.PROJET.CICS(&NOMPGM),DISP=SHR              00080002
+//STEPCOB.SYSLIB DD                                                     00090002
+//               DD                                                     00100002
+//               DD DSN=API6.PROJET.COPY,DISP=SHR                       00110002

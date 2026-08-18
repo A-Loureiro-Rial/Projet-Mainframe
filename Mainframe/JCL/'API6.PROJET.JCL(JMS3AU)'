@@ -1,0 +1,19 @@
+//JMS3AU  JOB DPTM,VSAM,MSGLEVEL=(1,1),MSGCLASS=H,CLASS=A,              00010002
+//     NOTIFY=&SYSUID,TIME=(0,5)                                        00020002
+//*------------------------------------------------------*              00030002
+//* MODIFIER XX PAR N¢ DU GROUPE *                                      00040002
+//* MODIFIER N PAR N¢ DE MAP *                                          00050002
+//* MODIFIER &MAP PAR MAPNCIXX *                                        00060002
+//*------------------------------------------------------*              00070002
+//*                                                                     00080002
+//         JCLLIB ORDER=SDJ.FORM.PROCLIB                                00090002
+//         EXEC COMPMAP,MAP=MS3AUTH                                     00100003
+//*                                                                     00110002
+//*----------------------------------------------------------*          00120002
+//* *                                                                   00130002
+//* COMPIL / LINK / COPY MAP CICS TS 2.2 *                              00140002
+//* *                                                                   00150002
+//*----------------------------------------------------------*          00160002
+//*                                                                     00170002
+//STEPEXT.SYSUT1   DD DSN=API6.PROJET.BMS(&MAP),DISP=SHR                00180003
+//STEPCOP.SYSPUNCH DD DSN=API6.PROJET.COPY(&MAP),DISP=SHR               00190003

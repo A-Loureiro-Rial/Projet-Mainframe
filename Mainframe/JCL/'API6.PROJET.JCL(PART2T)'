@@ -1,0 +1,59 @@
+//JPART2T  JOB (ACCT#),'ROMANE',MSGCLASS=H,REGION=4M,
+//       CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,TIME=(,30),
+//       RESTART=*,COND=(8,LT)
+//******************************************************************
+//*   STEP 00
+//******************************************************************
+//PROCLIB  JCLLIB ORDER=SDJ.FORM.PROCLIB
+//*
+//         SET SYSUID=API6,
+//             NOMPGM=TPART2
+//******************************************************************
+//*   STEP 01 COMPIL
+//******************************************************************
+//COMPIL   EXEC COMPDB2
+//STEPDB2.SYSLIB   DD DSN=&SYSUID..PROJET.DCLGEN,DISP=SHR
+//STEPDB2.SYSIN    DD DSN=&SYSUID..PROJET.TEST(&NOMPGM),DISP=SHR
+//STEPDB2.DBRMLIB  DD DSN=&SYSUID..SOURCE.DBRMLIB(&NOMPGM),DISP=SHR
+//STEPLNK.SYSLMOD  DD DSN=&SYSUID..SOURCE.PGMLIB(&NOMPGM),DISP=SHR
+//******************************************************************
+//*   STEP 02 BIND
+//******************************************************************
+//BIND     EXEC PGM=IKJEFT01,COND=(4,LT)
+//DBRMLIB  DD  DSN=&SYSUID..SOURCE.DBRMLIB,DISP=SHR
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=25000
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  BIND PLAN      (TPART2)   -
+       QUALIFIER (API6)    -
+       ACTION    (REPLACE) -
+       MEMBER    (TPART2)   -
+       VALIDATE  (BIND)    -
+       ISOLATION (CS)      -
+       ACQUIRE   (USE)     -
+       RELEASE   (COMMIT)  -
+       EXPLAIN   (NO)
+/*
+//*******************************************************************
+//*  ETAPE 03 : EXECUTION TRAITEMENTS DU BATCH DE VENTES TEST
+//*******************************************************************
+//EXECP2   EXEC PGM=IKJEFT01,COND=(8,LT)
+//STEPLIB  DD DSN=&SYSUID..SOURCE.PGMLIB,DISP=SHR
+//SYSOUT   DD  SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=2500
+//FSALES   DD DSN=API6.PROJET.P2TEST.DATA,DISP=SHR
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(PART2) PLAN (PART2)
+/*
+//*******************************************************************
+//*  STEP 4 : EXECUTION DE TPART2
+//*******************************************************************
+//EXECTEST EXEC PGM=IKJEFT01,COND=(8,LT)
+//STEPLIB  DD DSN=&SYSUID..SOURCE.PGMLIB,DISP=SHR
+//SYSOUT   DD  SYSOUT=*,OUTLIM=1000
+//SYSTSPRT DD  SYSOUT=*,OUTLIM=2500
+//SYSTSIN  DD  *
+  DSN SYSTEM (DSN1)
+  RUN PROGRAM(TPART2) PLAN (TPART2)
+/*

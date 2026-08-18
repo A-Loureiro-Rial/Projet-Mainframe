@@ -1,0 +1,197 @@
+000100 ID DIVISION.                                                     00010000
+000200 PROGRAM-ID.  EXTRACT.                                            00020099
+000300                                                                  00030000
+000400 ENVIRONMENT DIVISION.                                            00031000
+000500 CONFIGURATION SECTION.                                           00032000
+000600 SPECIAL-NAMES.                                                   00033000
+000700      DECIMAL-POINT IS COMMA.                                     00034000
+000800                                                                  00035000
+000900 INPUT-OUTPUT SECTION.                                            00035109
+001000 FILE-CONTROL.                                                    00035209
+001100      SELECT FEXTRACT ASSIGN TO FEXTRAC                           00035399
+001200      ORGANIZATION IS SEQUENTIAL                                  00035409
+001300      FILE STATUS  IS FS-FEXTRACT.                                00035599
+001400                                                                  00035602
+001500 DATA DIVISION.                                                   00036000
+001600 FILE SECTION.                                                    00036111
+001700 FD FEXTRACT.                                                     00036299
+001800 01 F-FEXTRACT.                                                   00036399
+001900   05 F-O-NO        PIC   9(3).                                   00036434
+002000   05 F-O-DATE.                                                   00036599
+002100     10 F-O-YEAR      PIC   X(4).                                 00036799
+002200     10 FILLER        PIC X.                                      00036899
+002300     10 F-O-MONTH     PIC   X(2).                                 00036999
+002400     10 FILLER        PIC X.                                      00037099
+002500     10 F-O-DAY       PIC   X(2).                                 00037199
+002600   05 F-COMPANY     PIC   X(30).                                  00037299
+002700   05 F-STATE       PIC   X(2).                                   00037399
+002800   05 F-CITY        PIC   X(20).                                  00037499
+002900   05 F-PHONE       PIC   X(10).                                  00037599
+003000   05 F-DNAME       PIC   X(20).                                  00037699
+003100   05 F-LNAME       PIC   X(20).                                  00037799
+003200   05 F-FNAME       PIC   X(20).                                  00037899
+003300   05 F-P-NO        PIC   X(3).                                   00037999
+003400   05 F-DESCR       PIC   X(30).                                  00038099
+003500   05 F-QUANTITY    PIC   9(2).                                   00038199
+003600   05 F-PRICE       PIC  999V99.                                  00038299
+003700                                                                  00038499
+003800 WORKING-STORAGE SECTION.                                         00038599
+003900* INCLUSION OF SQL COMMUNICATION AREA                             00038699
+004000     EXEC SQL INCLUDE SQLCA END-EXEC.                             00038799
+004100* INCLUSION OF USEFULL TABLES DCLGEN                              00038899
+004200     EXEC SQL INCLUDE ORDERS END-EXEC.                            00038999
+004300     EXEC SQL INCLUDE ITEMS  END-EXEC.                            00039099
+004400     EXEC SQL INCLUDE CUS    END-EXEC.                            00039199
+004500     EXEC SQL INCLUDE EMP    END-EXEC.                            00039299
+004600     EXEC SQL INCLUDE PRODUCTS END-EXEC.                          00039399
+004700     EXEC SQL INCLUDE DEPTS  END-EXEC.                            00039499
+004800                                                                  00039599
+004900* INCLUSION OF USEFULL TABLES CURSORS                             00039699
+005000     EXEC SQL                                                     00039799
+005100         DECLARE ORDCURS CURSOR FOR                               00039899
+005200           SELECT O_NO, S_NO, C_NO, O_DATE                        00039999
+005300           FROM API6.ORDERS                                       00040099
+005400     END-EXEC.                                                    00040199
+005500     EXEC SQL                                                     00040299
+005600         DECLARE ITEMCURS CURSOR FOR                              00040399
+005700           SELECT P_NO, QUANTITY, PRICE                           00040499
+005800           FROM API6.ITEMS                                        00040599
+005900           WHERE O_NO = :ORD-O-NO                                 00040699
+006000     END-EXEC.                                                    00041099
+006100                                                                  00041599
+006110 77 F-PHONE-NULL       PIC   S9(4) COMP.                                99
+006200 77 FS-FEXTRACT PIC    99.                                        00043099
+006300 77 WS-ABEND      PIC  9  VALUE 0.                                00044034
+006400 77 ED-ERR        PIC +9(6).                                      00044196
+006500 77 CURRENT-O-NO  PIC S999  VALUE -1.                             00044397
+006600 77 CURRENT-S-NO  PIC S999  VALUE -1.                             00044499
+006700 77 CURRENT-C-NO  PIC S999  VALUE -1.                             00044599
+006800 77 END-ITEMS     PIC 9     VALUE 0.                              00044699
+006900 77 END-ORDERS    PIC 9     VALUE 0.                              00044799
+007000                                                                  00044899
+007100 PROCEDURE DIVISION.                                              00044999
+007200                                                                  00045099
+007300     EXEC SQL                                                     00045199
+007400       OPEN ORDCURS                                               00045299
+007500     END-EXEC                                                     00045399
+007600                                                                  00045499
+007700     OPEN OUTPUT FEXTRACT                                         00045599
+007800     IF FS-FEXTRACT NOT EQUAL ZEROS                               00045699
+007900       DISPLAY 'OPEN FAILED : ' FS-FEXTRACT                       00045799
+008000     END-IF                                                       00046020
+008100                                                                  00047099
+008200     PERFORM FETCH-NEXT-ORDER                                     00047199
+008300     PERFORM TEST-SQLCODE                                         00047799
+008400                                                                  00047876
+008500     PERFORM UNTIL END-ORDERS EQUAL 1                             00047999
+008510       EXEC SQL                                                   00051499
+008520         OPEN ITEMCURS                                            00515 99
+008530       END-EXEC                                                   00051699
+008700       MOVE 0 TO END-ITEMS                                        00048399
+008800       PERFORM FETCH-NEXT-ITEM                                    00048499
+008900       PERFORM TEST-SQLCODE                                       00048599
+009000       PERFORM UNTIL END-ITEMS EQUAL 1                            00048699
+009010         PERFORM WRITE-ENTRY                                            99
+009020         INITIALIZE  ST-ITEM ST-PROD
+009200         PERFORM FETCH-NEXT-ITEM                                  00048899
+009300         PERFORM TEST-SQLCODE                                     00048999
+009400       END-PERFORM                                                00049099
+009401       INITIALIZE ST-ORD ST-CUS ST-DEP ST-EMP
+009410       PERFORM FETCH-NEXT-ORDER                                   00051899
+009420       PERFORM TEST-SQLCODE                                       00051999
+009500       EXEC SQL                                                   00051499
+009600         CLOSE ITEMCURS                                           00051599
+009700       END-EXEC                                                   00051699
+010100     END-PERFORM                                                  00052173
+010200                                                                  00052299
+010300     CLOSE FEXTRACT                                               00052399
+010400     EXEC SQL                                                     00052499
+010500       CLOSE ORDCURS                                              00052599
+010600     END-EXEC                                                     00053099
+010700                                                                  00060073
+010800     GOBACK.                                                            00
+010900                                                                  00078000
+011000                                                                  00600035
+011100 FETCH-NEXT-ORDER.                                                00601099
+011200     EXEC SQL                                                     00610099
+011300       FETCH ORDCURS                                              00620099
+011400       INTO :ORD-O-NO, :ORD-S-NO, :ORD-C-NO, :ORD-O-DATE          00630099
+011500     END-EXEC                                                     00640099
+011510     IF SQLCODE EQUAL 100                                         00669499
+011520       MOVE 1 TO END-ORDERS                                       00669599
+011530     END-IF                                                             99
+012000     EXEC SQL                                                     00650099
+012100           SELECT LNAME,FNAME, DEPT                               00660099
+012200           INTO :EMP-LNAME, :EMP-FNAME, :EMP-DEPT                 00660199
+012300           FROM API6.EMPLOYEES                                    00661099
+012400           WHERE E_NO = :ORD-S-NO                                 00663099
+012500     END-EXEC                                                     00664099
+012800     EXEC SQL                                                     00665099
+012900           SELECT COMPANY, STATE, CITY, PHONE                     00666099
+013000           INTO :CUS-COMPANY, :CUS-STATE, :CUS-CITY,                    99
+013010           :CUS-PHONE  :F-PHONE-NULL
+013100           FROM API6.CUSTOMERS                                    00667099
+013200           WHERE C_NO = :ORD-C-NO                                 00669099
+013300     END-EXEC.                                                    00669199
+013800                                                                  00669799
+013900 FETCH-NEXT-ITEM.                                                 00669899
+014000     EXEC SQL
+014100       FETCH ITEMCURS
+014200       INTO :ITEM-P-NO, :ITEM-QUANTITY, :ITEM-PRICE
+014300     END-EXEC
+014310     IF SQLCODE EQUAL 100                                         00671399
+014320       MOVE 1 TO END-ITEMS                                        00671499
+014330     END-IF                                                       00671599
+014400     EXEC SQL
+014500       SELECT DESCRIPTION
+014600       INTO :PROD-DESCRIPTION
+014700       FROM API6.PRODUCTS
+014800       WHERE P_NO = :ITEM-P-NO                                        99
+014900     END-EXEC .
+015700                                                                  00671699
+015800 TEST-SQLCODE.                                                    00671734
+016000     INITIALIZE ED-ERR                                            00672097
+016100     MOVE SQLCODE TO ED-ERR                                       00680059
+016200     EVALUATE TRUE                                                00690034
+016300       WHEN SQLCODE = ZERO                                        00700034
+016400         CONTINUE                                                 00710099
+016500       WHEN  SQLCODE = -803                                       00721045
+016600         DISPLAY 'ERROR : KEY ALREADY EXISTING.'                  00722034
+016700         PERFORM ABEND-PROG                                       00722399
+016800       WHEN  SQLCODE = 100                                        00722445
+016900         CONTINUE                                                 00722599
+017000       WHEN  SQLCODE = -530                                       00722669
+017100         DISPLAY 'ERROR : KEY DOES NOT EXIST.'                    00722734
+017200         PERFORM ABEND-PROG                                       00722899
+017300       WHEN SQLCODE > ZERO                                        00730034
+017400        DISPLAY 'WARNING - ' ED-ERR                               00740059
+017500       WHEN OTHER                                                 00760034
+017600        DISPLAY 'ERROR - ' ED-ERR                                 00770059
+017700        PERFORM ABEND-PROG                                        00780082
+017800     END-EVALUATE.                                                00820034
+017900                                                                  00830034
+018000 WRITE-ENTRY.                                                     00831099
+018010     INITIALIZE F-FEXTRACT
+018100     MOVE ORD-O-NO TO F-O-NO                                      00831199
+018200     MOVE ORD-O-DATE TO F-O-DATE                                  00831299
+018300     MOVE CUS-COMPANY TO F-COMPANY                                00831899
+018400     MOVE CUS-STATE TO F-STATE                                    00831999
+018500     MOVE CUS-CITY TO F-CITY                                      00832099
+018600     MOVE CUS-PHONE TO F-PHONE                                    00832199
+018700     MOVE DEP-DNAME TO F-DNAME                                    00832299
+018800     MOVE EMP-LNAME TO F-LNAME                                    00832399
+018900     MOVE EMP-FNAME TO F-FNAME                                    00832499
+019000     MOVE ITEM-P-NO TO F-P-NO                                     00832599
+019100     MOVE PROD-DESCRIPTION TO F-DESCR                             00832699
+019200     MOVE ITEM-QUANTITY TO F-QUANTITY                             00832799
+019300     MOVE ITEM-PRICE TO F-PRICE                                   00832899
+019400     WRITE F-FEXTRACT                                             00832999
+019500     EVALUATE FS-FEXTRACT                                         00833099
+019600       WHEN ZERO                                                  00833199
+019700         CONTINUE                                                 00833299
+019800       WHEN OTHER                                                 00833399
+019900         DISPLAY 'UNHANDLED WRITING ERROR ' FS-FEXTRACT           00833499
+020000     END-EVALUATE.                                                00833599
+020100                                                                  00834099
+020200 ABEND-PROG.                                                      00840034
+020300     COMPUTE WS-ABEND = 1 / WS-ABEND.                             00850099

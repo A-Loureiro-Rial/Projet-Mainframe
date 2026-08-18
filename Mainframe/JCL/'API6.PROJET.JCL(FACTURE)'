@@ -1,0 +1,25 @@
+//JFACTURE  JOB (ACCT#),'ROMANE',MSGCLASS=H,REGION=4M,
+//    CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,COND=(8,LT)
+//***********************************************************
+//*  ETAPE 01 : COMPILATION DE FACTURE
+//***********************************************************
+//COMPIL   EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD DSN=API6.PROJET.COBOL(FACTURE),DISP=SHR
+//COBOL.SYSLIB DD DSN=CEE.SCEESAMP,DISP=SHR
+//*********************************************************
+//*  ETAPE 02 : LINKEDIT
+//**********************************************************
+//LKED.SYSLMOD DD DSN=API6.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN DD *
+ NAME FACTURE(R)
+/*
+//***************************************************
+//*  ETAPE 03   : EXECUTION DU FACTURE
+//***************************************************
+//EXEC     EXEC PGM=FACTURE
+//STEPLIB  DD DSN=API6.COBOL.LOAD,DISP=SHR
+//SYSOUT   DD SYSOUT=*
+//FEXTRAC  DD DSN=API6.PROJET.EXTRACT.DATA,DISP=SHR
+//FOUT     DD DSN=API6.PROJET.FACTURES.DATA,DISP=(NEW,CATG,DELETE),
+//        DCB=(RECFM=FB,BLKSIZE=800,LRECL=80),
+//        SPACE=(TRK,(1,1),RLSE),DSORG=PS

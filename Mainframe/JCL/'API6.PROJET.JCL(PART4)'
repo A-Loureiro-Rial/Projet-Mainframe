@@ -1,0 +1,34 @@
+//JPART4    JOB (ACCT#),'ROMANE',MSGCLASS=H,REGION=4M,
+//    CLASS=A,MSGLEVEL=(1,1),NOTIFY=&SYSUID,
+//    RESTART=*,COND=(8,LT)
+//*******************************************************************
+//*  ETAPE 00 : SUPRESSION PRECEDANT FICHIER STATISTIQUES
+//*******************************************************************
+//SUPP     EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD *
+       DELETE API6.PROJET.STATS.DATA
+/*
+//***********************************************************
+//*  ETAPE 01 : COMPILATION DE PART4
+//***********************************************************
+//COMPIL   EXEC IGYWCL,PARM.COBOL=(ADV,OBJECT,LIB,TEST,APOST)
+//COBOL.SYSIN  DD DSN=API6.PROJET.COBOL(PART4),DISP=SHR
+//COBOL.SYSLIB DD DSN=CEE.SCEESAMP,DISP=SHR
+//*********************************************************
+//*  ETAPE 02 : LINKEDIT
+//**********************************************************
+//LKED.SYSLMOD DD DSN=API6.COBOL.LOAD,DISP=(SHR,KEEP,KEEP)
+//LKED.SYSIN DD *
+ NAME PART4(R)
+/*
+//***************************************************
+//*  ETAPE 03   : EXECUTION DU PART4
+//***************************************************
+//EXEC     EXEC PGM=PART4
+//STEPLIB  DD DSN=API6.COBOL.LOAD,DISP=SHR
+//SYSOUT   DD SYSOUT=*
+//FEXTRAC  DD DSN=API6.PROJET.EXTRACT.DATA,DISP=SHR
+//FOUT     DD DSN=API6.PROJET.STATS.DATA,DISP=(NEW,CATLG,DELETE),
+//        DCB=(RECFM=FB,BLKSIZE=1340,LRECL=134),
+//        SPACE=(TRK,(1,1),RLSE),DSORG=PS

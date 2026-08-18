@@ -1,0 +1,202 @@
+000100 ID DIVISION.                                                     00010000
+000200 PROGRAM-ID.  PART2.                                              00020034
+000300                                                                  00030000
+000310 ENVIRONMENT DIVISION.                                            00031000
+000320 CONFIGURATION SECTION.                                           00032000
+000330 SPECIAL-NAMES.                                                   00033000
+000340      DECIMAL-POINT IS COMMA.                                     00034000
+000350                                                                  00035000
+000351 INPUT-OUTPUT SECTION.                                            00035109
+000352 FILE-CONTROL.                                                    00035209
+000353      SELECT NEWSALES ASSIGN TO FSALES                            00035334
+000354      ORGANIZATION IS SEQUENTIAL                                  00035409
+000355      FILE STATUS  IS FS-NEWSALES.                                00035543
+000356                                                                  00035602
+000360 DATA DIVISION.                                                   00036000
+000361 FILE SECTION.                                                    00036111
+000362 FD NEWSALES.                                                     00036234
+000363 01 F-NEWSALES.                                                   00036334
+000364   05 F-O-NO        PIC   9(3).                                   00036434
+000365   05 F-O-DAY       PIC   X(2).                                   00036562
+000366   05 FILLER        PIC   X.                                      00036663
+000367   05 F-O-MONTH     PIC   X(2).                                   00036763
+000368   05 FILLER        PIC   X.                                      00036863
+000369   05 F-O-YEAR      PIC   X(4).                                   00036963
+000370   05 F-E-NO        PIC   9(2).                                   00037034
+000371   05 F-C-NO        PIC   9(4).                                   00037134
+000372   05 F-P-NO        PIC   X(3).                                   00037234
+000373   05 F-PRICE       PIC  999V99.                                  00037334
+000374   05 F-QUANTITY    PIC  9(2).                                    00037434
+000375   05 FILLER      PIC X(6).                                       00037534
+000376                                                                  00037602
+000377 WORKING-STORAGE SECTION.                                         00037700
+000378* INCLUSION OF SQL COMMUNICATION AREA                             00037834
+000383     EXEC SQL INCLUDE SQLCA END-EXEC.                             00038334
+000384* INCLUSION OF USEFULL TABLES                                     00038434
+000385     EXEC SQL INCLUDE ORDERS END-EXEC.                            00038547
+000386     EXEC SQL INCLUDE ITEMS END-EXEC.                             00038647
+000387     EXEC SQL INCLUDE PRODUCTS END-EXEC.                          00038747
+000388     EXEC SQL INCLUDE CUS END-EXEC.                               00038847
+000395                                                                  00039502
+000397*EXEC SQL BEGIN DECLARE SECTION END-EXEC.                         00039714
+000420*EXEC SQL END DECLARE SECTION END-EXEC.                           00042014
+000430 77 FS-NEWSALES   PIC  99.                                        00043034
+000440 77 WS-ABEND      PIC  9  VALUE 0.                                00044034
+000441 77 ED-ERR        PIC +9(6).                                      00044196
+000442 77 STOCK-ERR     PIC 9(6) .                                      00044299
+000443 77 CURRENT-O-NO  PIC S999  VALUE -1.                             00044397
+000444 77 CURRENT-C-NO  PIC 9(4).                                       00044497
+000445 77 TOTAL-PRICE   PIC 9(4)V99 VALUE 0.                            00044597
+000446 77 IS-ORDER-INSERTED   PIC 9 VALUE 0.                            00044697
+000447                                                                  00044797
+000448 PROCEDURE DIVISION.                                              00044897
+000449                                                                  00044997
+000450     OPEN INPUT NEWSALES                                          00045097
+000451     IF FS-NEWSALES NOT EQUAL ZEROS                               00045197
+000452       DISPLAY 'OPEN FAILED : ' FS-NEWSALES                       00045297
+000460     END-IF                                                       00046020
+000461     PERFORM READ-NEWSALES                                        00046173
+000462                                                                  00046276
+000470     PERFORM UNTIL FS-NEWSALES NOT EQUAL ZERO                     00047034
+000471*      ORDER COULD BE WRONGLY WRITTEN.                            00047184
+000472*      WE CAN'T USE THIS DATA.                                    00047284
+000473*      SKIP THANKS TO IS-ORDER-INSERTED.                          00047384
+000474       MOVE 0 TO IS-ORDER-INSERTED                                00047484
+000475       PERFORM UNTIL IS-ORDER-INSERTED EQUAL 1                    00047584
+000476                     OR FS-NEWSALES NOT EQUAL ZERO                00047688
+000477         PERFORM ADD-ORDER                                        00047784
+000478         PERFORM TEST-SQLCODE                                     00047890
+000479         IF STOCK-ERR EQUAL ZERO                                  00047999
+000480           MOVE 1 TO IS-ORDER-INSERTED                            00048085
+000482         ELSE                                                     00048287
+000483           PERFORM READ-NEWSALES                                  00048387
+000484         END-IF                                                   00048487
+000485         DISPLAY IS-ORDER-INSERTED 'INSERTION'                    00048594
+000486       END-PERFORM                                                00048684
+000487*    TRACK RUPTURE ELEMENTS                                       00048784
+000488       MOVE F-O-NO TO CURRENT-O-NO                                00048884
+000489       MOVE F-C-NO TO CURRENT-C-NO                                00048984
+000490       PERFORM UNTIL CURRENT-O-NO NOT EQUAL F-O-NO                00049084
+000491                  OR  FS-NEWSALES NOT EQUAL ZERO                  00049173
+000492         EVALUATE FS-NEWSALES                                     00049273
+000493           WHEN ZERO                                              00049373
+000494             PERFORM MAKE-MAJ                                     00049473
+000495           WHEN 1                                                 00049573
+000496             CONTINUE                                             00049688
+000497           WHEN OTHER                                             00049773
+000498             DISPLAY 'UNKNOWN FILE ERROR WHILE READING '          00049874
+000499                                  FS-NEWSALES                     00049974
+000500         END-EVALUATE                                             00050073
+000501         PERFORM READ-NEWSALES                                    00050173
+000502       END-PERFORM                                                00050273
+000503       PERFORM BALANCE-MAJ                                        00050376
+000504       MOVE 0 TO TOTAL-PRICE                                      00050480
+000505     END-PERFORM                                                  00050573
+000506     CLOSE NEWSALES                                               00050673
+000600                                                                  00060073
+000770      GOBACK.                                                     00077000
+000780                                                                  00078000
+000790 READ-NEWSALES.                                                   00079034
+000800     READ NEWSALES AT END                                         00080034
+000900         DISPLAY 'FILE NEWSALES EMPTY. FS-NEWSALES : '            00090034
+001000         FS-NEWSALES                                              00100034
+001100     END-READ.                                                    00110034
+001200                                                                  00120073
+002700                                                                  00270000
+002800 MAKE-MAJ.                                                        00280003
+003000     MOVE F-P-NO TO PROD-P-NO                                     00300072
+003100     MOVE F-O-NO TO ORD-O-NO                                      00310074
+003200     IF F-PRICE IS NOT NUMERIC                                    00320066
+003202       EXEC SQL                                                   00320267
+003203         SELECT PRICE INTO :PROD-PRICE                            00320367
+003204         FROM API6.PRODUCTS WHERE P_NO = :PROD-P-NO               00320468
+003205       END-EXEC                                                   00320567
+003206       PERFORM TEST-SQLCODE                                       00320667
+003207       MOVE PROD-PRICE TO F-PRICE                                 00320767
+003209     END-IF                                                       00320964
+005893*  THEN WE NEED TO INSERT IN ITEMS                                00589334
+005894     MOVE F-O-NO TO ITEM-O-NO                                     00589436
+005895     MOVE F-P-NO TO ITEM-P-NO                                     00589536
+005896     MOVE F-QUANTITY TO ITEM-QUANTITY                             00589636
+005897     MOVE F-PRICE TO ITEM-PRICE                                   00589736
+005898     EXEC SQL                                                     00589836
+005899       INSERT INTO API6.ITEMS ( O_NO,P_NO,QUANTITY,PRICE )        00589940
+005900       VALUES ( :ITEM-O-NO,:ITEM-P-NO,:ITEM-QUANTITY,:ITEM-PRICE )00590040
+005901     END-EXEC                                                     00590156
+005902     PERFORM TEST-SQLCODE                                         00590256
+005903     IF STOCK-ERR EQUAL ZERO                                      00590399
+005904         DISPLAY 'JE VAIS DANS LE IF !'                           00590493
+005905* IF ITEM IS ORDERED THEN UPDATE CORRESPONDING PRODUCT STOCK      00590583
+005906       MOVE F-P-NO TO PROD-P-NO                                   00590683
+005907       EXEC SQL                                                   00590783
+005908         SELECT STOCK INTO :PROD-STOCK FROM API6.PRODUCTS         00590883
+005909          WHERE P_NO = :PROD-P-NO                                 00590983
+005910       END-EXEC                                                   00591083
+005911       PERFORM TEST-SQLCODE                                       00591183
+005912       COMPUTE PROD-STOCK = PROD-STOCK - F-QUANTITY               00591283
+005913       EXEC SQL                                                   00591383
+005914         UPDATE API6.PRODUCTS                                     00591483
+005915          SET STOCK = :PROD-STOCK                                 00591583
+005916          WHERE P_NO = :PROD-P-NO                                 00591683
+005917       END-EXEC                                                   00591783
+005918       PERFORM TEST-SQLCODE                                       00591883
+005919       COMPUTE TOTAL-PRICE = TOTAL-PRICE + F-QUANTITY * F-PRICE   00591983
+005920     END-IF.                                                      00592083
+005921                                                                  00592176
+005922 BALANCE-MAJ.                                                     00592276
+005923     MOVE CURRENT-C-NO TO CUS-C-NO                                00592381
+005924     EXEC SQL                                                     00592436
+005925       SELECT BALANCE INTO :CUS-BALANCE FROM API6.CUSTOMERS       00592539
+005926        WHERE C_NO = :CUS-C-NO                                    00592636
+005927     END-EXEC                                                     00592736
+005928     PERFORM TEST-SQLCODE                                         00592856
+005929     COMPUTE CUS-BALANCE = CUS-BALANCE - TOTAL-PRICE              00592976
+005930     EXEC SQL                                                     00593036
+005931       UPDATE API6.CUSTOMERS                                      00593136
+005932        SET BALANCE = :CUS-BALANCE                                00593236
+005933        WHERE C_NO = :CUS-C-NO                                    00593336
+005934     END-EXEC                                                     00593456
+005935     PERFORM TEST-SQLCODE.                                        00593556
+005936                                                                  00593636
+005937 ADD-ORDER.                                                       00593736
+005938     STRING F-O-YEAR DELIMITED BY SIZE                            00593863
+005939            '-'      DELIMITED BY SIZE                            00593963
+005940            F-O-MONTH  DELIMITED BY SIZE                          00594063
+005941            '-'      DELIMITED BY SIZE                            00594163
+005942            F-O-DAY  DELIMITED BY SIZE                            00594263
+005943         INTO ORD-O-DATE                                          00594363
+005944     END-STRING                                                   00594463
+005945     MOVE F-O-NO TO ORD-O-NO                                      00594563
+005950     MOVE F-E-NO TO ORD-S-NO                                      00595063
+005951     MOVE F-C-NO TO ORD-C-NO                                      00595163
+005952     EXEC SQL                                                     00595236
+005953       INSERT INTO API6.ORDERS ( O_NO,S_NO,C_NO,O_DATE )          00595342
+005954       VALUES ( :ORD-O-NO,:ORD-S-NO,:ORD-C-NO,:ORD-O-DATE )       00595442
+005955     END-EXEC.                                                    00595595
+006000                                                                  00600035
+006700 TEST-SQLCODE.                                                    00670034
+006710     INITIALIZE ED-ERR                                            00671097
+006800     MOVE SQLCODE TO ED-ERR                                       00680059
+006810     MOVE SQLCODE TO STOCK-ERR                                    00681099
+006900     EVALUATE TRUE                                                00690034
+007000       WHEN SQLCODE = ZERO                                        00700034
+007010         EXEC SQL COMMIT END-EXEC                                 00701070
+007210       WHEN  SQLCODE = -803                                       00721045
+007220         DISPLAY 'ERROR : KEY ALREADY EXISTING.'                  00722034
+007222         EXEC SQL ROLLBACK END-EXEC                               00722234
+007223*        PERFORM ABEND-PROG                                       00722382
+007224       WHEN  SQLCODE = 100                                        00722445
+007225       WHEN  SQLCODE = -530                                       00722569
+007226         DISPLAY 'ERROR : KEY DOES NOT EXIST.'                    00722634
+007227         EXEC SQL ROLLBACK END-EXEC                               00722734
+007228*        PERFORM ABEND-PROG                                       00722875
+007300       WHEN SQLCODE > ZERO                                        00730034
+007400        DISPLAY 'WARNING - ' ED-ERR                               00740059
+007600       WHEN OTHER                                                 00760034
+007700        DISPLAY 'ERROR - ' ED-ERR                                 00770059
+007710        EXEC SQL ROLLBACK END-EXEC                                00771034
+007800        PERFORM ABEND-PROG                                        00780082
+008200     END-EVALUATE.                                                00820034
+008300                                                                  00830034
+008400 ABEND-PROG.                                                      00840034
+008500      COMPUTE WS-ABEND = 1 / WS-ABEND.                            00850034
